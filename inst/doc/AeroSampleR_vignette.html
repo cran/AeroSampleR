@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Using AeroSampleR to model aerosol sampling efficiency</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+<style type="text/css">.tabwid table{
+border-spacing:0px !important;
+border-collapse:collapse;
+line-height:1;
+margin-left:auto;
+margin-right:auto;
+border-width: 0;
+display: table;
+margin-top: 1.275em;
+margin-bottom: 1.275em;
+border-color: transparent;
+}
+.tabwid_left table{
+margin-left:0;
+}
+.tabwid_right table{
+margin-right:0;
+}
+.tabwid td {
+padding: 0;
+}
+.tabwid a {
+text-decoration: none;
+}
+.tabwid thead {
+background-color: transparent;
+}
+.tabwid tfoot {
+background-color: transparent;
+}
+.tabwid table tr {
+background-color: transparent;
+}
+.katex-display {
+margin: 0 0 !important;
+}
+</style>
+<style type="text/css">.flextable-shadow-host{
+overflow: auto;
+-ms-overflow-style: auto;
+}
+</style>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Using AeroSampleR to model aerosol sampling
+efficiency</h1>
+
+
+
+<style>
+body {
+text-align: justify}
+</style>
+<div id="aerosampler-introduction" class="section level2">
+<h2>AeroSampleR Introduction</h2>
+<p>Air sampling systems are used in many applications that require the
+monitoring of hazardous airborne particles. When tubing is used to
+collect aerosol particles, some of the particles are lost along the way.
+The efficiency of the system depends on the particle and tubing
+configuration.</p>
+<p>This version of AeroSampleR provides sampling efficiency for a
+limited set of system elements. Sampling systems always include a probe,
+after which are combinations of straight tubing and bends. While some
+systems include expansion or contraction elements, or sample splitters.
+These components are not covered in this version of AeroSampleR. The
+probe model is limited to a simple open ended pipe in still air.</p>
+<p>AeroSampleR relies on the concept of aerodynamic median activity
+diameter (AMAD), which accounts for particle density and shape, leaving
+equivalent spherical water droplets as the modeling targets.</p>
+<p>Efficiency functions are based predominantly on testing with aerosol
+particles through stainless steel tubing. The <a href="https://doi.org/10.1016/j.jaerosci.2012.05.007">Zhang</a>, <a href="https://doi.org/10.1021/es960975c">McFarland</a>, and <a href="https://doi.org/10.1080/02786828708959166">Pui</a> bend models are
+used in this package.</p>
+<p>The aerosol transport models are based on tests on clean systems.
+This package is designed primarily for new tubing designs. If a system
+is not maintained clean – and free of condensation, there can be no
+expectation that sampling efficiency models will be accurate.</p>
+<div id="example-data" class="section level3">
+<h3>example data</h3>
+<p>The first task in evaluating a system is to set up a table that
+includes all the “elements” with the following column headers:</p>
+<ul>
+<li><code>el_num</code> sequential number of the element</li>
+<li><code>el_type</code> starting with “probe”, followed by “tube” and
+“bend” elements</li>
+<li><code>length_cm</code> length of tubes in centimeters. Leave blank
+for probe and bends.</li>
+<li><code>angle_to_horiz</code> degree of slope of straight tube
+elements. Leave blank for probes and bends.</li>
+<li><code>orient</code> orientation of the probe. Options are “u” for
+up, “d” for down and “h” for horizontal `<code>bend_angle</code> how
+many degrees a bend turns the sample. Typically, 90 or 45. Leave blank
+for probes and tubes.</li>
+<li><code>bend_rad_cm</code> the bend radius in centimeters. Leave blank
+for probes and tubes.</li>
+</ul>
+<template id="f1d94d74-f923-4d2e-8eb8-28f2d34f2c1c"><style>
+.tabwid table{
+  border-spacing:0px !important;
+  border-collapse:collapse;
+  line-height:1;
+  margin-left:auto;
+  margin-right:auto;
+  border-width: 0;
+  display: table;
+  margin-top: 1.275em;
+  margin-bottom: 1.275em;
+  border-color: transparent;
+}
+.tabwid_left table{
+  margin-left:0;
+}
+.tabwid_right table{
+  margin-right:0;
+}
+.tabwid td {
+    padding: 0;
+}
+.tabwid a {
+  text-decoration: none;
+}
+.tabwid thead {
+    background-color: transparent;
+}
+.tabwid tfoot {
+    background-color: transparent;
+}
+.tabwid table tr {
+background-color: transparent;
+}
+.katex-display {
+    margin: 0 0 !important;
+}
+</style><div class="tabwid"><style>.cl-3bf063f2{}.cl-3bea4346{font-family:'Arial';font-size:11pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-3bea566a{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-3bea5674{margin:0;text-align:right;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-3bea819e{width:54pt;background-color:transparent;vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3bea81a8{width:54pt;background-color:transparent;vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3bea81a9{width:54pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3bea81aa{width:54pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3bea81ab{width:54pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3bea81b2{width:54pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table class="cl-3bf063f2">
+<thead><tr style="overflow-wrap:break-word;"><td class="cl-3bea81b2"><p class="cl-3bea566a"><span class="cl-3bea4346">el_num</span></p></td><td class="cl-3bea81b2"><p class="cl-3bea566a"><span class="cl-3bea4346">el_type</span></p></td><td class="cl-3bea81ab"><p class="cl-3bea5674"><span class="cl-3bea4346">length_cm</span></p></td><td class="cl-3bea81ab"><p class="cl-3bea5674"><span class="cl-3bea4346">angle_to_horiz</span></p></td><td class="cl-3bea81b2"><p class="cl-3bea566a"><span class="cl-3bea4346">orient</span></p></td><td class="cl-3bea81ab"><p class="cl-3bea5674"><span class="cl-3bea4346">bend_angle</span></p></td><td class="cl-3bea81ab"><p class="cl-3bea5674"><span class="cl-3bea4346">bend_rad_cm</span></p></td></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td class="cl-3bea81a8"><p class="cl-3bea566a"><span class="cl-3bea4346">1</span></p></td><td class="cl-3bea81a8"><p class="cl-3bea566a"><span class="cl-3bea4346">probe</span></p></td><td class="cl-3bea819e"><p class="cl-3bea5674"><span class="cl-3bea4346"></span></p></td><td class="cl-3bea819e"><p class="cl-3bea5674"><span class="cl-3bea4346"></span></p></td><td class="cl-3bea81a8"><p class="cl-3bea566a"><span class="cl-3bea4346">u</span></p></td><td class="cl-3bea819e"><p class="cl-3bea5674"><span class="cl-3bea4346"></span></p></td><td class="cl-3bea819e"><p class="cl-3bea5674"><span class="cl-3bea4346"></span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-3bea81a8"><p class="cl-3bea566a"><span class="cl-3bea4346">2</span></p></td><td class="cl-3bea81a8"><p class="cl-3bea566a"><span class="cl-3bea4346">tube</span></p></td><td class="cl-3bea819e"><p class="cl-3bea5674"><span class="cl-3bea4346">112</span></p></td><td class="cl-3bea819e"><p class="cl-3bea5674"><span class="cl-3bea4346">90</span></p></td><td class="cl-3bea81a8"><p class="cl-3bea566a"><span class="cl-3bea4346"></span></p></td><td class="cl-3bea819e"><p class="cl-3bea5674"><span class="cl-3bea4346"></span></p></td><td class="cl-3bea819e"><p class="cl-3bea5674"><span class="cl-3bea4346"></span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-3bea81a8"><p class="cl-3bea566a"><span class="cl-3bea4346">3</span></p></td><td class="cl-3bea81a8"><p class="cl-3bea566a"><span class="cl-3bea4346">bend</span></p></td><td class="cl-3bea819e"><p class="cl-3bea5674"><span class="cl-3bea4346"></span></p></td><td class="cl-3bea819e"><p class="cl-3bea5674"><span class="cl-3bea4346"></span></p></td><td class="cl-3bea81a8"><p class="cl-3bea566a"><span class="cl-3bea4346"></span></p></td><td class="cl-3bea819e"><p class="cl-3bea5674"><span class="cl-3bea4346">90</span></p></td><td class="cl-3bea819e"><p class="cl-3bea5674"><span class="cl-3bea4346">13</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-3bea81aa"><p class="cl-3bea566a"><span class="cl-3bea4346">4</span></p></td><td class="cl-3bea81aa"><p class="cl-3bea566a"><span class="cl-3bea4346">tube</span></p></td><td class="cl-3bea81a9"><p class="cl-3bea5674"><span class="cl-3bea4346">146</span></p></td><td class="cl-3bea81a9"><p class="cl-3bea5674"><span class="cl-3bea4346">0</span></p></td><td class="cl-3bea81aa"><p class="cl-3bea566a"><span class="cl-3bea4346"></span></p></td><td class="cl-3bea81a9"><p class="cl-3bea5674"><span class="cl-3bea4346"></span></p></td><td class="cl-3bea81a9"><p class="cl-3bea5674"><span class="cl-3bea4346"></span></p></td></tr></tbody></table></div></template>
+<div class="flextable-shadow-host" id="837499e7-cce7-46c5-8ff5-b9d0f638b5da"></div>
+<script>
+var dest = document.getElementById("837499e7-cce7-46c5-8ff5-b9d0f638b5da");
+var template = document.getElementById("f1d94d74-f923-4d2e-8eb8-28f2d34f2c1c");
+var caption = template.content.querySelector("caption");
+if(caption) {
+  caption.style.cssText = "display:block;text-align:center;";
+  var newcapt = document.createElement("p");
+  newcapt.appendChild(caption)
+  dest.parentNode.insertBefore(newcapt, dest.previousSibling);
+}
+var fantome = dest.attachShadow({mode: 'open'});
+var templateContent = template.content;
+fantome.appendChild(templateContent);
+</script>
+
+</div>
+<div id="get-the-system-data" class="section level3">
+<h3>1) Get the system data</h3>
+<p>You need to get this data into R and call it <code>sys_df</code>, the
+“system” data frame. There are many options on how to do this. Below are
+two examples. You will have to provide the path and the file name, but
+for the example, we’ll show the file to be called system.txt or
+system.xlsx in <code>c:/work</code>. Here are two:</p>
+<ol style="list-style-type: lower-alpha">
+<li>Use base R, (<code>utils</code> package that is loaded with base R)
+to read a text file:</li>
+</ol>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>sys_df <span class="ot">&lt;-</span> <span class="fu">read.table</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">file =</span> <span class="st">&quot;c:/work/system.txt&quot;</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">header =</span> <span class="cn">TRUE</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Use the readxl package to read a spreadsheet of the ‘xlsx’
+format:</li>
+</ol>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>sys_df <span class="ot">&lt;-</span> readxl<span class="sc">::</span><span class="fu">read_xlsx</span>(<span class="at">path =</span> <span class="st">&quot;c:/work/system.xlsx&quot;</span>,</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>           <span class="at">sheet =</span> <span class="st">&quot;Sheet1&quot;</span>, <span class="co">#default - update if needed</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">range =</span> <span class="st">&quot;A1:G5&quot;</span>, <span class="co">#put in entire range</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">col_types =</span> <span class="fu">c</span>(<span class="st">&quot;numeric&quot;</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>                         <span class="st">&quot;text&quot;</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                         <span class="st">&quot;numeric&quot;</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>                         <span class="st">&quot;numeric&quot;</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>                         <span class="st">&quot;text&quot;</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>                         <span class="st">&quot;numeric&quot;</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>                         <span class="st">&quot;numeric&quot;</span>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>                            )</span></code></pre></div>
+</div>
+<div id="create-particle-distribution-with-particle_dist" class="section level3">
+<h3>2) Create particle distribution with
+<code>particle_dist()</code></h3>
+<p>This function provides a logarithmic distribution of 1000 particle
+sizes and an additional set of discrete particles. By default, the
+logarithmically-distributed particles have an AMAD of 5 and a lognormal
+standard deviation of 2.5, consistent with ICRP 66. The discrete
+particles are 1, 5, and 10 micrometers AMAD.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">particle_dist</span>() <span class="co">#Default</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; _mean_ diameter for AMAD (median activity) =  0.9427043</span></span></code></pre></div>
+</div>
+<div id="set-up-the-parameters-for-tube-size-flow-rate-temperature-and-pressure.-these-parameters-are-not-particle-dependent-and-so-can-be-kept-in-a-small-separate-data-frame." class="section level3">
+<h3>3) Set up the parameters for tube size, flow rate, temperature, and
+pressure. These parameters are not particle dependent and so can be kept
+in a small separate data frame.</h3>
+<ul>
+<li>D_tube is the inner diameter of the tube {cm}</li>
+<li>Q_lpm is the flow rate of air {lpm}</li>
+<li>T_C is the system pressure {Celsius}</li>
+<li>P_kPa is the pressure of the system {kPa}</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># In this example the tubing wall is 1.65 mm thick. </span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>params <span class="ot">&lt;-</span> <span class="fu">set_params_1</span>(<span class="st">&quot;D_tube&quot;</span> <span class="ot">=</span> <span class="fl">2.54</span> <span class="sc">-</span> (<span class="dv">2</span> <span class="sc">*</span> <span class="fl">0.165</span>), <span class="co">#1 inch tube diameter</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                       <span class="st">&quot;Q_lpm&quot;</span> <span class="ot">=</span> <span class="dv">2</span> <span class="sc">*</span> <span class="fl">28.3</span>, <span class="co">#2 cfm converted to lpm</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                       <span class="st">&quot;T_C&quot;</span> <span class="ot">=</span> <span class="dv">25</span>, </span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>                       <span class="st">&quot;P_kPa&quot;</span> <span class="ot">=</span> <span class="fl">101.325</span>)</span></code></pre></div>
+<p>Next, we compute the particle size-dependent parameters. These
+include factors for transport efficiency computation. - Cunningham
+Correction Factor {C_c} - terminal settling velocity {v_ts} - Particle
+Reynolds number (tube) {Re_p} - Stokes number {Stk}</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">set_params_2</span>(df, params)</span></code></pre></div>
+<p>At this point, our main particle distribution data frame has been
+modified with computed factors for use in the transport efficiency
+models, row by row.</p>
+</div>
+<div id="next-we-compute-the-efficiency-element-by-element-in-transport-order.-we-have-only-four-elements-in-this-example-and-we-will-evaluate-them-with-prob_eff-tube_eff-bend_eff-and-lastly-tube_eff-again.-this-will-add-columns-to-our-particle-data-frame." class="section level3">
+<h3>4) Next, we compute the efficiency, element by element in transport
+order. We have only four elements in this example and we will evaluate
+them with <code>prob_eff()</code>, <code>tube_eff()</code>,
+<code>bend_eff()</code>, and lastly <code>tube_eff()</code> again. This
+will add columns to our particle data frame.</h3>
+<p>Calculate the efficiency of the probe via <code>prob_eff()</code> and
+add it to a new data frame. The orient argument sets the orientation of
+the probe. “u” means the probe is vertically upward. “d” is for a
+vertically downward facing probe. “h” is for a probe in a side
+configuration. The probe is in the first row, so we use <code>[1]</code>
+to identify the orient parameter.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">probe_eff</span>(df, params, <span class="at">orient =</span> sys_df<span class="sc">$</span>orient[<span class="dv">1</span>]) </span></code></pre></div>
+<p>Calculate the efficiency of the first tube. Tube Efficiency is found
+using <code>tube_eff()</code> function. The length is given in cm
+(<code>length_cm</code>) and the angle from tube to horizontal
+orientation parameter (<code>angle_to_horiz</code>) is specified here.
+All three parameters can be added to the above data frame, which will
+return a column for each distribution.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">tube_eff</span>(df, </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>               params, </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">L =</span> sys_df<span class="sc">$</span>length_cm[<span class="dv">2</span>] <span class="sc">/</span> <span class="dv">100</span>, </span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">angle_to_horiz =</span> sys_df<span class="sc">$</span>angle_to_horiz[<span class="dv">2</span>], </span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>               <span class="at">elnum =</span> sys_df<span class="sc">$</span>el_num[<span class="dv">2</span>])</span></code></pre></div>
+<p>Calculate the efficiency of the bend. Here, we’ll take the Zhang
+model option. Bend Efficiency is found via the <code>bend_eff()</code>
+function and is where you will choose to use one of three different tube
+models {Zhang, McFarland, or Pui}. The bend angle and element number are
+also listed in the function.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">bend_eff</span>(df, params, <span class="at">method =</span> <span class="st">&quot;Zhang&quot;</span>, </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">bend_angle =</span> sys_df<span class="sc">$</span>bend_angle[<span class="dv">3</span>],</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">bend_radius =</span> sys_df<span class="sc">$</span>bend_rad_cm[<span class="dv">3</span>] <span class="sc">/</span> <span class="dv">100</span>, </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">elnum =</span> sys_df<span class="sc">$</span>el_num[<span class="dv">3</span>])</span></code></pre></div>
+<p>Finally, we’ll calculate transport efficiency through the last tube
+element.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">tube_eff</span>(df, params, <span class="at">L =</span> sys_df<span class="sc">$</span>length_cm[<span class="dv">2</span>] <span class="sc">/</span> <span class="dv">100</span>, </span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">angle_to_horiz =</span> sys_df<span class="sc">$</span>angle_to_horiz[<span class="dv">4</span>], </span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">elnum =</span> sys_df<span class="sc">$</span>el_num[<span class="dv">4</span>])</span></code></pre></div>
+</div>
+<div id="at-this-point-the-transport-efficiencies-have-been-built-into-the-data-frame.-lets-have-a-look-at-the-bottom-few-rows." class="section level3">
+<h3>At this point, the transport efficiencies have been built into the
+data frame. Let’s have a look at the bottom few rows.</h3>
+<p><em>It doesn’t all fit horizontally, so match the top portion and the
+bottom portion by the row number.</em></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span>(df)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            D_p        probs     dist      C_c         v_ts         Re_p</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 998   97.58596 1.207282e-08 log_norm 1.001598 2.828305e-01 1.778384e+00</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 999   98.78560 1.114654e-08 log_norm 1.001579 2.898214e-01 1.844744e+00</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1000 100.00000 1.028949e-08 log_norm 1.001560 2.969852e-01 1.913581e+00</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1001   1.00000 1.000000e+00 discrete 1.203362 3.568242e-05 2.299144e-06</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1002   5.00000 1.000000e+00 discrete 1.033187 7.659083e-04 2.467509e-04</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1003  10.00000 1.000000e+00 discrete 1.015739 3.011898e-03 1.940672e-03</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;               Stk eff_probe eff_tube_2   eff_bend_3 eff_tube_4</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 998  6.4182782401 0.0000000  0.3428247 1.593206e-09          0</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 999  6.5769235956 0.0000000  0.3428247 9.356587e-10          0</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1000 6.7394918899 0.0000000  0.3428247 5.418602e-10          0</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1001 0.0008097418 1.0000000  0.3428247 9.985385e-01          0</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1002 0.0173807723 0.9999664  0.3428247 9.627252e-01          0</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1003 0.0683490543 0.9990397  0.3428247 8.498841e-01          0</span></span></code></pre></div>
+</div>
+<div id="generate-reports-with-report_basic-report_plots-and-report_cum_plots" class="section level3">
+<h3>5) Generate reports with <code>report_basic</code>,
+<code>report_plots</code> and <code>report_cum_plots</code></h3>
+<p>The <code>report_basic</code> function provides total system
+efficiency for either all of the logarithmically distributed particles
+or all of the discrete particle sizes.</p>
+<p>The <code>report_plots</code> function shows individual element
+efficiency. The <code>report_cum_plots</code> function shows cumulative
+efficiency through the system. This plot takes efficiency data from the
+rows of the data frame. It therefore only works for individually
+selected particle sizes.</p>
+<p>We’ll show the parameter set first, so that the output message on the
+basic report, regarding units, makes sense.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>params[, <span class="dv">7</span>] <span class="ot">&lt;-</span> <span class="fu">formatC</span>(params[, <span class="dv">7</span>], <span class="at">digits =</span> <span class="dv">2</span>, <span class="at">format =</span> <span class="st">&quot;e&quot;</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>params[, <span class="dv">8</span>] <span class="ot">&lt;-</span> <span class="fu">formatC</span>(params[, <span class="dv">8</span>], <span class="at">digits =</span> <span class="dv">2</span>, <span class="at">format =</span> <span class="st">&quot;e&quot;</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>params[, <span class="dv">11</span>] <span class="ot">&lt;-</span> <span class="fu">formatC</span>(params[, <span class="dv">11</span>], <span class="at">digits =</span> <span class="dv">2</span>, <span class="at">format =</span> <span class="st">&quot;e&quot;</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>params[, <span class="dv">3</span>] <span class="ot">&lt;-</span> <span class="fu">formatC</span>(params[, <span class="dv">3</span>], <span class="at">digits =</span> <span class="dv">4</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>params[, <span class="dv">10</span>] <span class="ot">&lt;-</span> <span class="fu">formatC</span>(params[, <span class="dv">10</span>], <span class="at">digits =</span> <span class="dv">4</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>ft <span class="ot">&lt;-</span> <span class="fu">flextable</span>(params)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>ft <span class="ot">&lt;-</span> <span class="fu">set_caption</span>(ft, <span class="st">&quot;system parameters&quot;</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>ft</span></code></pre></div>
+<template id="c577ca8e-9dac-4027-b963-4a4a9c6f3848"><style>
+.tabwid table{
+  border-spacing:0px !important;
+  border-collapse:collapse;
+  line-height:1;
+  margin-left:auto;
+  margin-right:auto;
+  border-width: 0;
+  display: table;
+  margin-top: 1.275em;
+  margin-bottom: 1.275em;
+  border-color: transparent;
+}
+.tabwid_left table{
+  margin-left:0;
+}
+.tabwid_right table{
+  margin-right:0;
+}
+.tabwid td {
+    padding: 0;
+}
+.tabwid a {
+  text-decoration: none;
+}
+.tabwid thead {
+    background-color: transparent;
+}
+.tabwid tfoot {
+    background-color: transparent;
+}
+.tabwid table tr {
+background-color: transparent;
+}
+.katex-display {
+    margin: 0 0 !important;
+}
+</style><div class="tabwid"><style>.cl-3c144a10{}.cl-3c0ed148{font-family:'Arial';font-size:11pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-3c0edda0{margin:0;text-align:right;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-3c0eddaa{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-3c0eff4c{width:54pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3c0eff56{width:54pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3c0eff57{width:54pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3c0eff58{width:54pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table class="cl-3c144a10">
+<caption class="Table Caption">
+<p>system parameters</p>
+</caption>
+<thead><tr style="overflow-wrap:break-word;"><td class="cl-3c0eff57"><p class="cl-3c0edda0"><span class="cl-3c0ed148">D_tube</span></p></td><td class="cl-3c0eff57"><p class="cl-3c0edda0"><span class="cl-3c0ed148">Q_lpm</span></p></td><td class="cl-3c0eff58"><p class="cl-3c0eddaa"><span class="cl-3c0ed148">velocity_air</span></p></td><td class="cl-3c0eff57"><p class="cl-3c0edda0"><span class="cl-3c0ed148">T_K</span></p></td><td class="cl-3c0eff57"><p class="cl-3c0edda0"><span class="cl-3c0ed148">P_kPa</span></p></td><td class="cl-3c0eff57"><p class="cl-3c0edda0"><span class="cl-3c0ed148">density_air</span></p></td><td class="cl-3c0eff58"><p class="cl-3c0eddaa"><span class="cl-3c0ed148">viscosity_air</span></p></td><td class="cl-3c0eff58"><p class="cl-3c0eddaa"><span class="cl-3c0ed148">mfp</span></p></td><td class="cl-3c0eff57"><p class="cl-3c0edda0"><span class="cl-3c0ed148">density_par</span></p></td><td class="cl-3c0eff58"><p class="cl-3c0eddaa"><span class="cl-3c0ed148">Re</span></p></td><td class="cl-3c0eff58"><p class="cl-3c0eddaa"><span class="cl-3c0ed148">k</span></p></td></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td class="cl-3c0eff4c"><p class="cl-3c0edda0"><span class="cl-3c0ed148">0.0221</span></p></td><td class="cl-3c0eff4c"><p class="cl-3c0edda0"><span class="cl-3c0ed148">56.6</span></p></td><td class="cl-3c0eff56"><p class="cl-3c0eddaa"><span class="cl-3c0ed148">2.459</span></p></td><td class="cl-3c0eff4c"><p class="cl-3c0edda0"><span class="cl-3c0ed148">298.15</span></p></td><td class="cl-3c0eff4c"><p class="cl-3c0edda0"><span class="cl-3c0ed148">101.325</span></p></td><td class="cl-3c0eff4c"><p class="cl-3c0edda0"><span class="cl-3c0ed148">1.183907</span></p></td><td class="cl-3c0eff56"><p class="cl-3c0eddaa"><span class="cl-3c0ed148">1.84e-05</span></p></td><td class="cl-3c0eff56"><p class="cl-3c0eddaa"><span class="cl-3c0ed148">6.67e-02</span></p></td><td class="cl-3c0eff4c"><p class="cl-3c0edda0"><span class="cl-3c0ed148">1,000</span></p></td><td class="cl-3c0eff56"><p class="cl-3c0eddaa"><span class="cl-3c0ed148"> 3502</span></p></td><td class="cl-3c0eff56"><p class="cl-3c0eddaa"><span class="cl-3c0ed148">1.38e-23</span></p></td></tr></tbody></table></div></template>
+<div class="flextable-shadow-host" id="ddce67a3-02eb-4a2d-a7c0-9d30cfac0c63"></div>
+<script>
+var dest = document.getElementById("ddce67a3-02eb-4a2d-a7c0-9d30cfac0c63");
+var template = document.getElementById("c577ca8e-9dac-4027-b963-4a4a9c6f3848");
+var caption = template.content.querySelector("caption");
+if(caption) {
+  caption.style.cssText = "display:block;text-align:center;";
+  var newcapt = document.createElement("p");
+  newcapt.appendChild(caption)
+  dest.parentNode.insertBefore(newcapt, dest.previousSibling);
+}
+var fantome = dest.attachShadow({mode: 'open'});
+var templateContent = template.content;
+fantome.appendChild(templateContent);
+</script>
+
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>ft <span class="ot">&lt;-</span> <span class="fu">flextable</span>(<span class="fu">report_basic</span>(df, params, <span class="st">&quot;discrete&quot;</span>))</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; System Parameters</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; All values in MKS units, except noted</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Notes: D_tube is in m.</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Q_lpm is system flow in liters per minute.</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; velocity_air is the derived air flow velocity in meters per second.T_K is system temperature in Kelvin.</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; P_kPa is system pressure in kiloPascals.</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Re is the system Reynolds number, a measure of turbulence.</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>ft <span class="ot">&lt;-</span> <span class="fu">colformat_double</span>(ft, <span class="at">digits =</span> <span class="dv">3</span>)</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>ft <span class="ot">&lt;-</span> <span class="fu">set_caption</span>(ft, <span class="st">&quot;results for discrete particle diameters&quot;</span>)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>ft</span></code></pre></div>
+<template id="27600714-49b3-495d-9ce7-5bd397632d3a"><style>
+.tabwid table{
+  border-spacing:0px !important;
+  border-collapse:collapse;
+  line-height:1;
+  margin-left:auto;
+  margin-right:auto;
+  border-width: 0;
+  display: table;
+  margin-top: 1.275em;
+  margin-bottom: 1.275em;
+  border-color: transparent;
+}
+.tabwid_left table{
+  margin-left:0;
+}
+.tabwid_right table{
+  margin-right:0;
+}
+.tabwid td {
+    padding: 0;
+}
+.tabwid a {
+  text-decoration: none;
+}
+.tabwid thead {
+    background-color: transparent;
+}
+.tabwid tfoot {
+    background-color: transparent;
+}
+.tabwid table tr {
+background-color: transparent;
+}
+.katex-display {
+    margin: 0 0 !important;
+}
+</style><div class="tabwid"><style>.cl-3c2e7dea{}.cl-3c22570e{font-family:'Arial';font-size:11pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-3c226348{margin:0;text-align:right;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-3c227d60{width:54pt;background-color:transparent;vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3c227d6a{width:54pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3c227d6b{width:54pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table class="cl-3c2e7dea">
+<caption class="Table Caption">
+<p>results for discrete particle diameters</p>
+</caption>
+<thead><tr style="overflow-wrap:break-word;"><td class="cl-3c227d6b"><p class="cl-3c226348"><span class="cl-3c22570e">D_p</span></p></td><td class="cl-3c227d6b"><p class="cl-3c226348"><span class="cl-3c22570e">sys_eff</span></p></td></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td class="cl-3c227d60"><p class="cl-3c226348"><span class="cl-3c22570e">1.000</span></p></td><td class="cl-3c227d60"><p class="cl-3c226348"><span class="cl-3c22570e">0.000</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-3c227d60"><p class="cl-3c226348"><span class="cl-3c22570e">5.000</span></p></td><td class="cl-3c227d60"><p class="cl-3c226348"><span class="cl-3c22570e">0.000</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-3c227d6a"><p class="cl-3c226348"><span class="cl-3c22570e">10.000</span></p></td><td class="cl-3c227d6a"><p class="cl-3c226348"><span class="cl-3c22570e">0.000</span></p></td></tr></tbody></table></div></template>
+<div class="flextable-shadow-host" id="4dfe9518-f395-4007-9273-a79a439d591b"></div>
+<script>
+var dest = document.getElementById("4dfe9518-f395-4007-9273-a79a439d591b");
+var template = document.getElementById("27600714-49b3-495d-9ce7-5bd397632d3a");
+var caption = template.content.querySelector("caption");
+if(caption) {
+  caption.style.cssText = "display:block;text-align:center;";
+  var newcapt = document.createElement("p");
+  newcapt.appendChild(caption)
+  dest.parentNode.insertBefore(newcapt, dest.previousSibling);
+}
+var fantome = dest.attachShadow({mode: 'open'});
+var templateContent = template.content;
+fantome.appendChild(templateContent);
+</script>
+
+
+report_plots(df, &quot;discrete&quot;)
+<p><img src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">report_cum_plots</span>(df, <span class="dv">1</span>)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">report_cum_plots</span>(df, <span class="dv">5</span>)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">report_cum_plots</span>(df, <span class="dv">10</span>)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>ft <span class="ot">&lt;-</span> <span class="fu">flextable</span>(<span class="fu">report_basic</span>(df, params, <span class="st">&quot;log&quot;</span>))</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; System Parameters</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; All values in MKS units, except noted</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Notes: D_tube is in m.</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Q_lpm is system flow in liters per minute.</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; velocity_air is the derived air flow velocity in meters per second.T_K is system temperature in Kelvin.</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; P_kPa is system pressure in kiloPascals.</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Re is the system Reynolds number, a measure of turbulence.</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>ft <span class="ot">&lt;-</span> <span class="fu">colformat_double</span>(ft, <span class="at">digits =</span> <span class="dv">3</span>)</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>ft <span class="ot">&lt;-</span> <span class="fu">set_caption</span>(ft, <span class="st">&quot;results for log distribution of particle diameters&quot;</span>)</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>ft</span></code></pre></div>
+<template id="8c7c7c8c-0bd6-4f12-9bce-ffcc39fd54bd"><style>
+.tabwid table{
+  border-spacing:0px !important;
+  border-collapse:collapse;
+  line-height:1;
+  margin-left:auto;
+  margin-right:auto;
+  border-width: 0;
+  display: table;
+  margin-top: 1.275em;
+  margin-bottom: 1.275em;
+  border-color: transparent;
+}
+.tabwid_left table{
+  margin-left:0;
+}
+.tabwid_right table{
+  margin-right:0;
+}
+.tabwid td {
+    padding: 0;
+}
+.tabwid a {
+  text-decoration: none;
+}
+.tabwid thead {
+    background-color: transparent;
+}
+.tabwid tfoot {
+    background-color: transparent;
+}
+.tabwid table tr {
+background-color: transparent;
+}
+.katex-display {
+    margin: 0 0 !important;
+}
+</style><div class="tabwid"><style>.cl-3c744f0a{}.cl-3c6f0c5c{font-family:'Arial';font-size:11pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-3c6f186e{margin:0;text-align:right;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-3c6f313c{width:54pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3c6f3146{width:54pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table class="cl-3c744f0a">
+<caption class="Table Caption">
+<p>results for log distribution of particle diameters</p>
+</caption>
+<thead><tr style="overflow-wrap:break-word;"><td class="cl-3c6f3146"><p class="cl-3c6f186e"><span class="cl-3c6f0c5c">eff_mass_weighted</span></p></td></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td class="cl-3c6f313c"><p class="cl-3c6f186e"><span class="cl-3c6f0c5c">0.000</span></p></td></tr></tbody></table></div></template>
+<div class="flextable-shadow-host" id="5ae6057c-6c2f-4472-a8bb-70aa9ba47921"></div>
+<script>
+var dest = document.getElementById("5ae6057c-6c2f-4472-a8bb-70aa9ba47921");
+var template = document.getElementById("8c7c7c8c-0bd6-4f12-9bce-ffcc39fd54bd");
+var caption = template.content.querySelector("caption");
+if(caption) {
+  caption.style.cssText = "display:block;text-align:center;";
+  var newcapt = document.createElement("p");
+  newcapt.appendChild(caption)
+  dest.parentNode.insertBefore(newcapt, dest.previousSibling);
+}
+var fantome = dest.attachShadow({mode: 'open'});
+var templateContent = template.content;
+fantome.appendChild(templateContent);
+</script>
+
+</div>
+<div id="optional-extra-reports-for-the-logarithmically-distributed-particle-set" class="section level3">
+<h3>6) Optional extra reports for the logarithmically distributed
+particle set</h3>
+<p>The <code>report_log_mass</code> function provides details on every
+particle size.</p>
+<p>Since there are 1000 data points, the full ouptput is probably not
+suitable for a typical report. The report provides the following columns
+of output:</p>
+<p>-microns = the particle size in micrometers (microns is shorter, but
+is considered supersed by micrometers) -probs = relative probability of
+a particle being in this size bin -bin_eff = the overall system
+efficiency for a particle of this size -amb_mass = the probability of
+the particle multiplied by the mass of a spherical particle with the
+size given and density of 1 g per ml. This is the relative mass of this
+particle size in the ambient air being sampled. -sampled_mass = the
+relative mass that made it through the sampling system with this
+particle size -bin_frac_lost = ambient mass in this bin minus the
+sampled mass in the bin, divided by the ambient mass -total_frac_lost =
+ambient mass in this bin minus the sampled mass in the bin, divided by
+the sum of the ambient mass</p>
+<p>A random selection of ten rows of the 1000 rows are provided
+below:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>df_log <span class="ot">&lt;-</span> <span class="fu">report_log_mass</span>(df)[<span class="fu">sort</span>(<span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">1000</span>, <span class="dv">10</span>)), ]</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co"># need to make format changes so that flextable will show scientific notation</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>df_log[, <span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="fu">formatC</span>(df_log[, <span class="dv">1</span>], <span class="at">digits =</span> <span class="dv">4</span>)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>df_log[, <span class="dv">2</span>] <span class="ot">&lt;-</span> <span class="fu">formatC</span>(df_log[, <span class="dv">2</span>], <span class="at">digits =</span> <span class="dv">2</span>, <span class="at">format =</span> <span class="st">&quot;e&quot;</span>)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>df_log[, <span class="dv">3</span>] <span class="ot">&lt;-</span> <span class="fu">formatC</span>(df_log[, <span class="dv">3</span>], <span class="at">digits =</span> <span class="dv">2</span>, <span class="at">format =</span> <span class="st">&quot;e&quot;</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>df_log[, <span class="dv">4</span>] <span class="ot">&lt;-</span> <span class="fu">formatC</span>(df_log[, <span class="dv">4</span>], <span class="at">digits =</span> <span class="dv">2</span>, <span class="at">format =</span> <span class="st">&quot;e&quot;</span>)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>df_log[, <span class="dv">5</span>] <span class="ot">&lt;-</span> <span class="fu">formatC</span>(df_log[, <span class="dv">5</span>], <span class="at">digits =</span> <span class="dv">2</span>, <span class="at">format =</span> <span class="st">&quot;e&quot;</span>)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>df_log[, <span class="dv">6</span>] <span class="ot">&lt;-</span> <span class="fu">formatC</span>(df_log[, <span class="dv">6</span>], <span class="at">digits =</span> <span class="dv">2</span>, <span class="at">format =</span> <span class="st">&quot;e&quot;</span>)</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>df_log[, <span class="dv">7</span>] <span class="ot">&lt;-</span> <span class="fu">formatC</span>(df_log[, <span class="dv">7</span>], <span class="at">digits =</span> <span class="dv">2</span>, <span class="at">format =</span> <span class="st">&quot;e&quot;</span>)</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>ft <span class="ot">&lt;-</span> <span class="fu">flextable</span>(df_log)</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>ft <span class="ot">&lt;-</span> <span class="fu">colformat_double</span>(ft, <span class="at">digits =</span> <span class="dv">3</span>)</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>ft <span class="ot">&lt;-</span> <span class="fu">set_caption</span>(ft, <span class="st">&quot;results for random sample of 1000 particle diameters from the log set&quot;</span>)</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>ft</span></code></pre></div>
+<template id="73991dc7-aa81-4bd2-b264-64e588208ab8"><style>
+.tabwid table{
+  border-spacing:0px !important;
+  border-collapse:collapse;
+  line-height:1;
+  margin-left:auto;
+  margin-right:auto;
+  border-width: 0;
+  display: table;
+  margin-top: 1.275em;
+  margin-bottom: 1.275em;
+  border-color: transparent;
+}
+.tabwid_left table{
+  margin-left:0;
+}
+.tabwid_right table{
+  margin-right:0;
+}
+.tabwid td {
+    padding: 0;
+}
+.tabwid a {
+  text-decoration: none;
+}
+.tabwid thead {
+    background-color: transparent;
+}
+.tabwid tfoot {
+    background-color: transparent;
+}
+.tabwid table tr {
+background-color: transparent;
+}
+.katex-display {
+    margin: 0 0 !important;
+}
+</style><div class="tabwid"><style>.cl-3ca47040{}.cl-3c9e5318{font-family:'Arial';font-size:11pt;font-weight:normal;font-style:normal;text-decoration:none;color:rgba(0, 0, 0, 1.00);background-color:transparent;}.cl-3c9e6466{margin:0;text-align:left;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);padding-bottom:5pt;padding-top:5pt;padding-left:5pt;padding-right:5pt;line-height: 1;background-color:transparent;}.cl-3c9e93a0{width:54pt;background-color:transparent;vertical-align: middle;border-bottom: 0 solid rgba(0, 0, 0, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3c9e93a1{width:54pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 0 solid rgba(0, 0, 0, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}.cl-3c9e93aa{width:54pt;background-color:transparent;vertical-align: middle;border-bottom: 2pt solid rgba(102, 102, 102, 1.00);border-top: 2pt solid rgba(102, 102, 102, 1.00);border-left: 0 solid rgba(0, 0, 0, 1.00);border-right: 0 solid rgba(0, 0, 0, 1.00);margin-bottom:0;margin-top:0;margin-left:0;margin-right:0;}</style><table class="cl-3ca47040">
+<caption class="Table Caption">
+<p>results for random sample of 1000 particle diameters from the log
+set</p>
+</caption>
+<thead><tr style="overflow-wrap:break-word;"><td class="cl-3c9e93aa"><p class="cl-3c9e6466"><span class="cl-3c9e5318">D_p</span></p></td><td class="cl-3c9e93aa"><p class="cl-3c9e6466"><span class="cl-3c9e5318">probs</span></p></td><td class="cl-3c9e93aa"><p class="cl-3c9e6466"><span class="cl-3c9e5318">bin_eff</span></p></td><td class="cl-3c9e93aa"><p class="cl-3c9e6466"><span class="cl-3c9e5318">amb_mass</span></p></td><td class="cl-3c9e93aa"><p class="cl-3c9e6466"><span class="cl-3c9e5318">sampled_mass</span></p></td><td class="cl-3c9e93aa"><p class="cl-3c9e6466"><span class="cl-3c9e5318">bin_frac_lost</span></p></td><td class="cl-3c9e93aa"><p class="cl-3c9e6466"><span class="cl-3c9e5318">total_frac_lost</span></p></td></tr></thead><tbody><tr style="overflow-wrap:break-word;"><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.01048</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">2.41e-04</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">1.45e-10</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">1.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">7.12e-13</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.02318</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">5.28e-03</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">3.45e-08</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">1.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">1.69e-10</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.1068</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">2.42e-01</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">1.54e-04</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">1.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">7.55e-07</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.1236</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">3.02e-01</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">2.98e-04</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">1.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">1.46e-06</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.1991</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">5.18e-01</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">2.14e-03</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">1.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">1.05e-05</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.2944</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">6.60e-01</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">8.82e-03</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">1.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">4.32e-05</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.3326</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">6.86e-01</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">1.32e-02</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">1.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">6.48e-05</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">1.669</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">2.15e-01</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">5.23e-01</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">1.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">2.56e-03</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">15.61</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">2.56e-04</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">5.09e-01</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">1.00e+00</span></p></td><td class="cl-3c9e93a0"><p class="cl-3c9e6466"><span class="cl-3c9e5318">2.50e-03</span></p></td></tr><tr style="overflow-wrap:break-word;"><td class="cl-3c9e93a1"><p class="cl-3c9e6466"><span class="cl-3c9e5318">   40</span></p></td><td class="cl-3c9e93a1"><p class="cl-3c9e6466"><span class="cl-3c9e5318">2.54e-06</span></p></td><td class="cl-3c9e93a1"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a1"><p class="cl-3c9e6466"><span class="cl-3c9e5318">8.49e-02</span></p></td><td class="cl-3c9e93a1"><p class="cl-3c9e6466"><span class="cl-3c9e5318">0.00e+00</span></p></td><td class="cl-3c9e93a1"><p class="cl-3c9e6466"><span class="cl-3c9e5318">1.00e+00</span></p></td><td class="cl-3c9e93a1"><p class="cl-3c9e6466"><span class="cl-3c9e5318">4.16e-04</span></p></td></tr></tbody></table></div></template>
+<div class="flextable-shadow-host" id="55e9c72e-0e81-423b-8923-8cbd27d4d5ea"></div>
+<script>
+var dest = document.getElementById("55e9c72e-0e81-423b-8923-8cbd27d4d5ea");
+var template = document.getElementById("73991dc7-aa81-4bd2-b264-64e588208ab8");
+var caption = template.content.querySelector("caption");
+if(caption) {
+  caption.style.cssText = "display:block;text-align:center;";
+  var newcapt = document.createElement("p");
+  newcapt.appendChild(caption)
+  dest.parentNode.insertBefore(newcapt, dest.previousSibling);
+}
+var fantome = dest.attachShadow({mode: 'open'});
+var templateContent = template.content;
+fantome.appendChild(templateContent);
+</script>
+
+<p>The particle mass modeled in the ambient air and sampled through the
+air sampling system is shown with the function
+<code>report_plots</code>.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">report_plots</span>(df, <span class="st">&quot;log&quot;</span>)</span></code></pre></div>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAeAAAAEgCAMAAABb4lATAAABMlBMVEUAAAAAADoAAGYAOjoAOmYAOpAAZrYAv8QzMzM6AAA6ADo6AGY6OgA6Ojo6OmY6OpA6ZmY6ZpA6ZrY6kLY6kNtNTU1NTW5NTY5NbqtNjshmAABmADpmAGZmOgBmOmZmZjpmZmZmkJBmkNtmtrZmtttmtv9uTU1uTW5uTY5ubqtuq8huq+SOTU2OTW6OTY6ObquOyP+QOgCQOjqQZgCQZjqQZmaQkDqQkGaQkLaQtpCQttuQ27aQ2/+rbk2rbm6rbo6rjk2ryKur5P+2ZgC2Zjq2kDq2tpC2ttu229u22/+2/9u2///Ijk3I///bkDrbtmbbtpDb27bb29vb/7bb/9vb///kq27k///r6+vy8vL4dm3/tmb/yI7/25D/27b/29v/5Kv//7b//8j//9v//+T///+8hL/sAAAACXBIWXMAAA7DAAAOwwHHb6hkAAARa0lEQVR4nO2djYPbNhnGfddeStrBPrjbRrbCgKZ8bECzwWDbbcACY+W6dLAdC05Tek3z//8L6JW/9WHJsmU7uudpL7Hs17KkX15JtmUr2kNBKxo6AZBfAXDgAuDABcCBC4ADFwAHLgAOXAAcuLoDfDWbpEu7xcml0mT74wtTLLvFxGSi2Ec+Xm08lI7KTjxgkboDVK+AV8fjAEzpkAFbpO4A5QOwVmMCbLv20OUC+PFLUXT0M1bTTU8fT9nCZhq9ekmA2cLNh1mBP70bRT9IQl+8RPa7RRRFp0Ic+VZax3b/Mgez+z2zuFd3vFM63rl4PDGefPdkw3maDtopQcoSzgLf8rWbaM7XZMk8fDkAXkVcc1bgr0xZ2X3EPqIJK5UbtHB0nrZoFEhCqX0ZcB5HvjVdd/NuCibdMK853ivK4wnxFLvvN4lFAXg7ZWvZ6nkOOKmGNhRNIGoOeLc4fkjeNKEyvbd/TNC205PLq1n0w8vd31nRU9ntFuR9X08pFE1YA8fWF5VgEUex9Wp29PH+6SJKwWynr12mFtrjTVTHE+IpH4pxe0w/sawNTlx/eXxRtMFL/qHpQxyinNrgf3/xh2k04aXGypOVBhUQX6DyvEicg/vqikJUZtw1yq1cGkexNdmDx7nnCzd++qX5eBme4nhCPOXds4o372StGHI6dgGY6uiQamgXwEllmJVYUqktqcCTIqY68ORyk1SMURJKOz0F4DyOYmvS/BWdoyUZvPqw5ngT5fHEeEq7z9NVOWCKccMbigwwxRpSDe0AmFWNr/zpH9/M2gAu4tAD3n/Nek3R8YX+eFaAy7vP05hzwPSxzN2Zp44FQ6qhHQAn5ZS0iXKBF1X0PLVXAS7iKLYmNWj1ZOtfH0Rz/fGqTUJ2PCEeYXeu4jx4dfQJGZYAb6Kfh1RDOwFmvSJ2TpK2e6UCZ/2XcqfnY3bqkhZ/Bjir+4o4iq2sc3SP97kSkw3rsrHojs5rjlft1KXHE+IpH4odfjtLm97kwNvpO+TweYNMi98PqYZ26kUnlaFc4Py0JXOOtM48rXhwdppUxFHaulGdJpGF7ng3lMdTxxPlJvMkHdmBKYIUcJK6VRTUBQ+HThZdUbj58TLtr5bb4M00ejm/0LFlZjfuVaroq7t0TlSJo7SVGt2b/6xe6HjtsuZ4dGHlVel4Yjz57vxCB790Qun4Nrn8xU/fkhjS1JX73wHocO8mWVwadVLSSQtGACzo6d2Q+tAALEVaXC4PQwBcEet0vdZ9rEPqcAFDVgLgwAXAgQuAAxcABy4ADlzNAa8rEoJK9Wgz7uR44GcUAPu0AeCubcadHA/8jAJgnzYA3LXNuJPjgZ9RAOzTBoC7thl3cjzwMwqAfdqEBjgmeSstAHZRl4DjWE0YgLPgAOoQcBxrCANwFhxAAOzTJijAcawjDMBZcAABsE8bAO7aBoBFdQx4rSIMwFlwAHV3w5+TTT7jziKF2qozD85cFx6sN/HAzyg/gGO1TbvSAmAXdQt4DcB1Jh74GdU5YEUdDcBZcAB5AhwrbdqVFgC7CIB92gQEuIQVgHUmHvgZBcA+bUIDXFqMFTYtSwuAXQTAPm3CBCzV0QCcBQcQAPu0CRlwLNu0LC0AdhEA+7QJB3CVKQCrTTzwMwqAfdoEBjhfKdTRAJwFBxAA+7QJFfAagJUmHvgZBcA+bcIGHAs2bUsLgF0EwD5tggW8BmCViQd+RtUAfv7e2Zvf8aVn98/e+CpbrcwCANuYeKepkB7wi08f7P/zI1p6/h5bSlkDcBObUQN+/tuv9s9+SY777Fff7Z//5vN0vTILSsBx1aZtaQGwi/SAC6zF0veYlMacpxjGEywjkB7wkzczrLyKfr3Og6VBHGt4sMKkF6KCbDyYOlm//swIuLIegBUmfQAVZdMGZ6FEqixoAMedlhYAu6iuF/1u1otmfpwskVRZAGArkx54SjKeB5MTPzk7y8+SLAGvAVg26QOoqG6uZAGwlYkHfkb5BRx3WVoA7CIA9mkTMuA1AANws9ICYBd5Bhx3WFoA7CIA9mkTNOA1AANwo9ICYBd1Ali+mZSv7bC0ANhF3QGWcpdjB+AsOIA8Al4DMAA3KS0AdpF3wDEAF8EB5BPwGoCF4AACYJ82ANyktADYRf4BxwCcBwcQAPu0CR3wGoCrwQHUyaQcnGOjDVBfggf7tDlID1ZkoR5wDMBZcACVAV/Njs7NeyiyoAW8BuBKcABVPXgZRSeXhj0UWQBgOxN/GPUSq+irWRSd1u6hyIIBsHpT49ICYBfJbTAhPr7Q76HIQg1FAC4Hldre1jeMTx/WbraQCHgVRRNWVddU1IosALCdibpAawi2hEuqAN4tomhOC5saF5azUFcPA3A52JRix4CvZnVVcyY5C0bAFoSvOWByLVZz5t/bacT6QvR5Wtq8vf3RNHVBR8B83zr31QPWZBGAy0Ed4N1iss/+iAInsTq+ILilzdspazpXNl7YH2DbOvp6A+ZFvkmAkv53maxPAeebp/PG1XYBmHWvUk1q95CzAMCWJnrA1KnNSHJtGIejHHC6mbN1Bpx7sEFyFsyAzYQBuAyYX1MseXBHgO0kZ6EeIQAXQS1gukZcqqI50U3hweXNroCZ+9IlDlKnbTAAl4I6wOVOFv0R0e306Jzq1HIna7webCR8vQFLp0lL1gJ/wuguo0nlNGmMgO1c+BoD9qtqJ6v+NkMiOQsAbGniC2KdKh5MZ0pz0x5yFmwAmwgDsCeJVTRV/vV1vJwFE0AAzoIDSNEGL7vtRQNwERxACg82XOuUswDAlib+MOpVAVytn4s5G158epa/LtoVsIEwAHuS/lJlMWfD/tED/nrwRHIWANjSpCemFdm8L7p4VzRJzoKJ3x6A06BS/1Wra8DSpcrynA1/Sato9ZwNnF/dQWKjxXVWT4AlFXM2PLv/gONOJP9G7Ty43oXhwT0Art7wV8264gjYoh8NwL0DLrXBv+sEcC1hAPYOWBzRUczZQL3omiraSA+As+CggKURHcWcDWypZu5CC8DmOhqAe+9k6SRlwQYeAPOgUj0C3i1O+cgBT4ANXt60uDxGM27Ayzl9bu8Il5SlFTLgZTKooOGoSivvBOC1GTArInvAksyAHcdFA7CtiQEwLyMJ8JY/zLB7/49RdLrhj34u36E1xPNqRlelti9/wFYky8MCrrECYA3gq7fOiWXyYMOEY12eXLIvvnS6X9H6UxqHaVFF86ciTAN3pCzYdaAA2NGDCfLbF7v3z/f0R7ypil7OGU8KsG1ENiVuAMzH0xue/wbgBjadtMH8Fn0Z8N/OM8Cz5PkHe8A2krLQALDeDIA1vWg+NPqO6MG7BQf8Nkc6DsAGMwDWAOb0bp9XAE/2RRucNr52gPlTqY2fbABgWxMXwHQJ+ebdeQXwOzTwJu1Fp0u8H2bqRe8Wp8z1TY+gSVloAlhrB8A6wC0lniYlTu8DcD1hAO4JMDut8nIevAbg4QFT683orjx5cK0hAPcBmG42LBs/2dAMsMYSgPsAbCUpC/a3AgFYpSEAp2fQSklZAGBbE3WBhgZYbQrAIQCuMQVgAAZgFw0AWGkLwKMBLIlDa2KLh1gqGhtg6TfawIP1LgwPDgOw1hiAewVcJzELhjv5awVghTUAOwKu3gXeLeY6wNmzo43vBzcDrHNhAGa6deuWP8DWErNg5AvAebAe8K1bZcLZ5k3icdLo2au3Pyzd90+GS9LQgFEAlu0BWAOYukOriWL07NXs5JJeUJqPnuX38qX3nFUBr9ivxHC3sC1gDWEA1gF+K7+5Vx09S3fv2WIxepZ+CoYqennyzWze9NEVALY2MQBWt8GsbuY3cMXRs5y8OHpWfqxFGNFBP4uGIzqaAlbvAMA1vejNyaU8epYApx6cnNSaPbhPwOIeAKwBTCPksqGxldGzV7NJtiEdSGdug1dURTd9dKUxYCVhANZ5cPruQWn07NVbP6mOnqW3Spt60S6PrgCwtYkTYJ1Kva869X6aRFIQBuAeAMstNAC3sxnZtWi3aXUcACsIA3APgPemaxxcYhZcAMs7AXAvHux8s6FpSUguDMB9eLCVxCy0ABzX2tjE42AyOsB+NRBgyYUB2JOGAizuBsCeNCzguN7GJp7GJgBskJiFVoDjWhubeBqbAHCmYlKOJ2c1LyN1BCwQBmBP0gMuJuWgF86mLxbedwd4DcB9yGZSDlKxJGbBGXCFMAB7kh5w9UX+iQerJuXglJyOHbvvCtnKZlIOmpZDPzGWuweXXRge7Em2Hqyfs6EF4BJhAPYk2zaY5m1IJGahPeDYrrQA2EV1vehsUo5yZS0BVg3PsC8JAPYt43kwP0c6009O2Q5wThiAPan1lSwzXwvAMQD70tCAM8IA7EmDA5ZvDTvGY2sCwAYJaW4N2Gp6YZt4LE0A2CAhze0BWxMGYAeNB7CZMAA7aAyAbQkDsINGAdiSMAA7aByA7QgDsINGAtiKMAA7aCyA00uebec3BGBRowG8NhMGYAeNB7CZMAA7aESAjYQB2EFjAmwiDMAOGhVgA2IAdtDIANcSBmAHjQ1wHWEAdtDoAOeEnd5nCcCixgdYTxiAHTRCwFrEAOyg5oAFcRBdpESK1EfE10+j9OCSDzd8CwA8WNRIAZcRN4kHgEW1BWy6QeBeWrITA7CDxgu4gtj2ATUAFjVmwBXCdo+3ALCoTgB7LK1YdGN/h/JgA8Bmm7gRYgAWNXrAIuLWw7YA2KBqmnsAvG7AGIBFHQZgCXGLMQEAbFA1zX0BXtu5MQCLOiDA673kx76mXwLgXP0Clqtq4fAALOrQAK/VjDt+IyIA5xoA8FrDuMN3uQBwrmEAr7WMh0qOlYkHfkYdLOD84I1BA3C9qmke3mUMlAftaQNwVzZGyiXWAFwvRcn2U1qNr3Y19u3Ok3z4gE0F1WVp2ZZoY84K4ACcaoyAM7mDNuF3Ss56dICLSTmKpf0BAU7VNecqdG1YOcXqALKZlKNYIlVL79bhKmb/io9iWfGtCtF/fTj/Gi/g4oXg1VeDl1M8LKGD0HgBF6/0L5bESTmGLr0DkGd+RtlMyqF/4/vQpXcAOiwPJq1BuJBYAGtxacSdLJs2eOy3b4a2GfVpUjEpR7FEGqy0ANhFVpNy6M+DR16iQ9uMG7BGg5UWALsIgH3aAHDXNuNOjgd+RgGwT5uDBFyVNNvssPEEmpwWAmCf8QBw1/EEmpwWAmCf8QQAGBq5ADhwAXDgAuDABcCBqxXgyl0mVz27f3b2YE/TyJ+98ZXZXKd0/7ZJomgoPe2Sw++ep0nppJDc1QZwdbSlo2ioyLNffL5/9KBdPMn+nSSJhii1Ss4T+m2kSekkRS3UBnB1pIejnlDmHz148dnnRtM6pft3kST6ybVKzqPX/0o30ZOkdFJILdQGcHWsVguxSFhFxmtq5yiS/btIEvlby+QQ0TQpnRWSo9oAro62dBcNCaJauo3bpPt3kCS+e8vkEOA0KV0VkqtG4MHP33s3XWrfDneQpCd5l8g9OYF4cDfNy7P7eTm2B9xBkh69my+1AhxAG1wdbemolC/5zYs/u5dDun/7JCUVc8vkENE0KZ0UUgsNfh5cOvF8vU1Flu7fOklpddouOYGcB0MHIAAOXAAcuAA4cAFw4ALgwHXwgLe3z4dOwqh18IChegFw4DpEwNvbH02j6HTLPua8it4tomjC1t/5MDq+yALcaM4W2Bd9X1MdJODpyeV+FdHH8QUDvFtM9lczxnrKwFKA/hIjvp32mA+d6KF0mIDn2cft8+R/sX5zfME/8u13LgZM6vA6SMDcKdMP9p8zzdZvmOPuM+r0seQ19rVV+ID3rPqOjq+tG4cAOK+iOeCj86SKLgDveQt9TRUC4LxfRasqgcy9r/HVkBAA56dJHGM5QB8bdpZ0dG35HiRgqIEAOHABcOAC4MAFwIELgAMXAAcuAA5cABy4ADhw/R8rDnfD1/iiRwAAAABJRU5ErkJggg==" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
