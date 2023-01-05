@@ -35,7 +35,7 @@ report_basic <- function(df, params, dist) {
 
     # # housekeeping to avoid no visible binding warnings #. = NULL -
     # try this if below doesn't work
-    D_p = microns = sys_eff = probs = ambient = bin_eff = sampled = . = starts_with = NULL
+    D_p = microns = sys_eff = dens = ambient = bin_eff = sampled = . = starts_with = NULL
     # provide parameter details
     cat("System Parameters")
     cat("\n")
@@ -80,12 +80,12 @@ report_basic <- function(df, params, dist) {
 df_log$bin_eff <- apply(df_log[, eff_cols], 1, prod)
 # compute ambient mass-based quantity for each bin
 
-df_log$ambient <- df_log$probs * 4/3 *
-                   pi * (df_log$D_p/2)^3
+df_log$ambient <- df_log$dens * 4/3 *
+                   pi * (df_log$D_p/2)^3 * diff(c(0, df_log$D_p))
 
 df_log$sampled <- df_log$ambient * df_log$bin_eff
 
-data.frame("eff_mass_weighted" = sum(df_log$sampled)/
+data.frame("activity fraction sampled" = sum(df_log$sampled)/
              sum(df_log$ambient))
     }
 }

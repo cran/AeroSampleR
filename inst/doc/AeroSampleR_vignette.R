@@ -7,6 +7,7 @@ knitr::opts_chunk$set(
 ## ----echo=FALSE, message=FALSE, warning=FALSE---------------------------------
 library(AeroSampleR)
 library(ggplot2)
+library(dplyr)
 library(flextable)
 
 ## ----echo=FALSE, message=FALSE, warning=FALSE, comment = ">"------------------
@@ -47,6 +48,19 @@ ft
 
 ## ----echo=TRUE, message=TRUE, warning=FALSE-----------------------------------
 df <- particle_dist() #Default
+
+
+## ----echo=FALSE, message=TRUE, warning=FALSE, fig.width=5, fig.height= 3------
+df |> filter(dist == "log_norm") |> 
+  ggplot(aes(D_p, dens)) + geom_point(color = "blue") +
+  ggtitle("distribution of lognormal particle sizes")
+
+df |> filter(dist == "log_norm") |> 
+  mutate("activity" = D_p ^3 * dens)  |> 
+  ggplot(aes(D_p, activity)) + geom_point(color = "blue") +
+  ggtitle("relative activity by particle size",
+          subtitle = "diameter cubed times density")
+
 
 ## ----echo=TRUE, message=TRUE, warning=FALSE-----------------------------------
 # In this example the tubing wall is 1.65 mm thick. 
@@ -108,7 +122,7 @@ report_cum_plots(df, 10)
 ft <- flextable(report_basic(df, params, "log"))
 ft <- colformat_double(ft, digits = 3)
 ft <- set_caption(ft, "results for log distribution of particle diameters")
-ft
+ft  
 
 
 ## ----echo=TRUE, message=TRUE, warning=FALSE, fig.width=5, fig.height= 3, fig.align = 'center'----
