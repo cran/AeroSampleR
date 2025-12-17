@@ -28,23 +28,23 @@ ft <- colformat_double(ft, digits = 0)
 ft
 
 ## ----echo=TRUE, eval=FALSE----------------------------------------------------
-#  sys_df <- read.table(
-#    file = "c:/work/system.txt",
-#    header = TRUE
-#    )
+# sys_df <- read.table(
+#   file = "c:/work/system.txt",
+#   header = TRUE
+#   )
 
 ## ----echo=TRUE, eval=FALSE----------------------------------------------------
-#  sys_df <- readxl::read_xlsx(path = "c:/work/system.xlsx",
-#             sheet = "Sheet1", #default - update if needed
-#             range = "A1:G5", #put in entire range
-#             col_types = c("numeric",
-#                           "text",
-#                           "numeric",
-#                           "numeric",
-#                           "text",
-#                           "numeric",
-#                           "numeric")
-#                              )
+# sys_df <- readxl::read_xlsx(path = "c:/work/system.xlsx",
+#            sheet = "Sheet1", #default - update if needed
+#            range = "A1:G5", #put in entire range
+#            col_types = c("numeric",
+#                          "text",
+#                          "numeric",
+#                          "numeric",
+#                          "text",
+#                          "numeric",
+#                          "numeric")
+#                             )
 
 ## ----echo=TRUE, message=TRUE, warning=FALSE-----------------------------------
 df <- particle_dist() #Default

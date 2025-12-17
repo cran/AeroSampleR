@@ -33,8 +33,8 @@ This version of AeroSampleR provides sampling efficiency for a limited set of sy
 
 AeroSampleR relies on the concept of aerodynamic median activity diameter (AMAD), which accounts for particle density and shape, leaving equivalent spherical water droplets as the modeling targets. 
 
-Efficiency functions are based predominantly on testing with aerosol particles through stainless steel tubing. The [Zhang](https://doi.org/10.1016/j.jaerosci.2012.05.007),
-[McFarland](https://doi.org/10.1021/es960975c), and [Pui](https://doi.org/10.1080/02786828708959166) bend models are used in this package.
+Efficiency functions are based predominantly on testing with aerosol particles through stainless steel tubing. The [Zhang](https://doi.org/10.1016/j.jaerosci.2012.05.007)
+and [Pui](https://doi.org/10.1080/02786828708959166) bend models are used in this package.
 
 The aerosol transport models are based on tests on clean systems. This package is designed primarily for new tubing designs. If a system is not maintained clean -- and free of condensation, there can be no expectation that sampling efficiency models will be accurate. 
 
@@ -173,8 +173,7 @@ df <- tube_eff(df,
                elnum = sys_df$el_num[2])
 ```
 
-Calculate the efficiency of the bend. Here, we'll take the Zhang model option. Bend Efficiency is found via the `bend_eff()` function and is where you will choose to use one of three different tube models {Zhang,
-McFarland, or Pui}. The bend angle and element number are also listed in the function.
+Calculate the efficiency of the bend. Here, we'll take the Zhang model option. Bend Efficiency is found via the `bend_eff()` function and is where you will choose to use one of three different tube models {Zhang (the default), or Pui}. The bend angle and element number are also listed in the function.
 
 ```{r echo=TRUE, message=TRUE, warning=FALSE}
 df <- bend_eff(df, params, method = "Zhang", 
@@ -244,7 +243,7 @@ The `report_log_mass` function provides details on every particle size.
 Since there are 1000 data points, the full ouptput is probably not suitable for a typical report. The report provides the following columns of output: 
 
 -  microns = the particle size in micrometers (microns is
-shorter, but is considered supersed by micrometers) 
+shorter, but is considered superseded by micrometers) 
 -  probs = relative probability of a particle being in this size bin 
 -  bin_eff = the overall system efficiency for a particle of this size 
 -  amb_mass = the probability of the particle multiplied by the mass of a spherical particle with the size given and density of 1 g per ml. This is the relative mass of this particle size in the ambient air being sampled.
